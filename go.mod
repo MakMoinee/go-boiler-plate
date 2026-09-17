@@ -1,6 +1,6 @@
 module github.com/MakMoinee/go-boiler-plate
 
-go 1.26.7
+go 1.27.1
 
 require github.com/MakMoinee/go-mith v1.2.17
 
