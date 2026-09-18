@@ -2,7 +2,10 @@ module github.com/MakMoinee/go-boiler-plate
 
 go 1.27.1
 
-require github.com/MakMoinee/go-mith v1.2.17
+require (
+	github.com/MakMoinee/go-mith v1.2.18
+	github.com/go-chi/cors v1.2.2
+)
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
