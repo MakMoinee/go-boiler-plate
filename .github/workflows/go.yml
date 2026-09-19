@@ -28,10 +28,18 @@ jobs:
       - name: Generate Code Coverage
         run: go test -v -tags test -coverprofile=coverage.txt -covermode=count $(go list ./...)
 
+      # Docker
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: false
           tags: goboilerplate:api
