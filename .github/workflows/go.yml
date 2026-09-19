@@ -7,10 +7,10 @@ on:
     branches: ["main"]
 
 env:
-  GCP_PROJECT_ID: ${{ vars.PROJECT_ID }}
-  GCP_REGION: asia-southeast1
-  GAR_REPOSITORY: goboilerplate
-  IMAGE_NAME: goboilerplate-api
+  GCP_PROJECT_ID: "${{ vars.PROJECT_ID }}"
+  GAR_LOCATION: "asia-southeast1"
+  GAR_REPOSITORY: "goboilerplate"
+  IMAGE_NAME: "goboilerplate-api"
 
 jobs:
   build:
@@ -21,22 +21,13 @@ jobs:
       id-token: write
 
     steps:
-      # ---------------------------------------------------------
-      # Checkout
-      # ---------------------------------------------------------
-
       - name: Checkout
         uses: actions/checkout@v7
-
-      # ---------------------------------------------------------
-      # Go
-      # ---------------------------------------------------------
 
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
           go-version: "1.27"
-          cache: true
 
       - name: Build
         run: go build -v ./...
@@ -46,11 +37,11 @@ jobs:
 
       - name: Generate Code Coverage
         run: |
-          go test \
+          go test -v \
             -tags test \
             -coverprofile=coverage.txt \
             -covermode=count \
-            ./...
+            $(go list ./...)
 
       # ---------------------------------------------------------
       # Docker
@@ -67,35 +58,35 @@ jobs:
       # ---------------------------------------------------------
 
       - name: Authenticate to Google Cloud
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/auth@v3
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ vars.IDP }}
-          service_account: github-actions@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+          workload_identity_provider: "${{ vars. IDP }}"
+          service_account: "github-actions@${{ vars.PROJECT_ID }}.iam.gserviceaccount.com"
 
       # ---------------------------------------------------------
       # Docker authentication
       # ---------------------------------------------------------
 
       - name: Configure Docker for Artifact Registry
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           gcloud auth configure-docker \
-            ${{ env.GCP_REGION }}-docker.pkg.dev \
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev \
             --quiet
 
       # ---------------------------------------------------------
-      # Docker image
+      # Build
       # ---------------------------------------------------------
 
-      - name: Build and Push Docker image
+      - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: |
-            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
