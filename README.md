@@ -8,3 +8,6 @@ Boiler Plate for Go Rest API
 [![Build Status](https://img.shields.io/github/actions/workflow/status/MakMoinee/go-boiler-plate/go.yml?style=for-the-badge&branch=main)](https://github.com/MakMoinee/go-boiler-plate/actions/workflows/go.yml)
 
 </div>
+
+## Google Artifacts Registry Console Setup
+- refer  to: `https://github.com/MakMoinee/go-boiler-plate/blob/main/GAR%20SETUP.md`
