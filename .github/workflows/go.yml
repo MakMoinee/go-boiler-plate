@@ -6,9 +6,20 @@ on:
   pull_request:
     branches: ["main"]
 
+env:
+  GCP_PROJECT_ID: "${{ secrets.PROJECT_ID }}"
+  GAR_LOCATION: "asia-southeast1"
+  GAR_REPOSITORY: "goboilerplate"
+  IMAGE_NAME: "goboilerplate-api"
+  PROJECT_NUMBER: ${{ secrets.PROJECT_NUMBER }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout
@@ -26,14 +37,49 @@ jobs:
         run: go test -v ./...
 
       - name: Generate Code Coverage
-        run: go test -v -tags test -coverprofile=coverage.txt -covermode=count $(go list ./...)
+        run: |
+          go test -v \
+            -tags test \
+            -coverprofile=coverage.txt \
+            -covermode=count \
+            $(go list ./...)
 
+      # ---------------------------------------------------------
       # Docker
+      # ---------------------------------------------------------
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+
+      # ---------------------------------------------------------
+      # Google Cloud Authentication
+      # ---------------------------------------------------------
+
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: "projects/${{ env.PROJECT_NUMBER}}/locations/global/workloadIdentityPools/github-actions/providers/github"
+          service_account: "github-actions@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
+
+      # ---------------------------------------------------------
+      # Docker authentication
+      # ---------------------------------------------------------
+
+      - name: Configure Docker for Artifact Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          gcloud auth configure-docker \
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev \
+            --quiet
+
+      # ---------------------------------------------------------
+      # Build
+      # ---------------------------------------------------------
 
       - name: Build Docker image
         uses: docker/build-push-action@v7
@@ -41,5 +87,7 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: false
-          tags: goboilerplate:api
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
