@@ -21,17 +21,18 @@ type Restapi struct {
 }
 
 func (r *Restapi) GetUsers(parentContext context.Context, schema any) ([]models.UserRequest, error) {
-	common.LOGGER.Info("inside restapi>GetUsers()")
 	ctx, cancel := context.WithTimeout(parentContext, 10*time.Second)
 	defer cancel()
 
 	resp, err := r.Client.Do(ctx, schema)
 	if err != nil {
+		common.LOGGER.Info("inside restapi>GetUsers()")
 		return []models.UserRequest{}, err
 	}
 
 	userList := []models.UserRequest{}
 	if err := json.Unmarshal(resp, &userList); err != nil {
+		common.LOGGER.Info("inside restapi>GetUsers()")
 		common.LOGGER.ErrorContext(ctx, fmt.Sprintf("decode response: %v", err))
 		return []models.UserRequest{}, err
 	}
