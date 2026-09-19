@@ -10,4 +10,4 @@ Boiler Plate for Go Rest API
 </div>
 
 ## Google Artifacts Registry Console Setup
-- refer  to: `https://github.com/MakMoinee/go-boiler-plate/blob/main/GAR%20SETUP.md`
+- refer  to: [![here](https://github.com/MakMoinee/go-boiler-plate/blob/main/GAR%20SETUP.md)]
