@@ -63,7 +63,7 @@ jobs:
         uses: google-github-actions/auth@v3
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
-          workload_identity_provider: "projects/${{ env.PROJECT_NUMBER}}/locations/global/workloadIdentityPools/github-actions/providers/github"
+          workload_identity_provider: ${{ secrets.IDP }}
           service_account: "github-actions@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
 
       # ---------------------------------------------------------
